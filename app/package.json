@@ -1,0 +1,16 @@
+{
+  "name": "dappnode-sample-dashboard",
+  "version": "0.1.0",
+  "description": "Small dashboard to show geth + IPFS connectivity for the DAppNode demo image",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
