@@ -41,13 +41,16 @@ app.get('/blockNumber', async (req, res) => {
 
 app.get('/ipfs-id', async (req, res) => {
   try {
-    const r = await fetch(`${IPFS_API}/api/v0/id`);
+    const r = await fetch(`${IPFS_API}/api/v0/id`, {
+      method: 'POST'  // Add POST method as IPFS API requires it
+    });
     const json = await r.json();
     res.json(json);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

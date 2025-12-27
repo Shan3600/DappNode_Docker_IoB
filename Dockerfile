@@ -21,14 +21,14 @@ RUN add-apt-repository -y ppa:ethereum/ethereum && \
     apt-get install -y --no-install-recommends geth && \
     rm -rf /var/lib/apt/lists/*
 
-# Install go-ipfs (IPFS binary)
+# Install IPFS (kubo) binary
 RUN set -ex \
-    && TARGET="go-ipfs-${IPFS_VERSION}-linux-amd64.tar.gz" \
-    && wget -q "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/${TARGET}" -O /tmp/ipfs.tar.gz \
+    && TARGET="kubo_${IPFS_VERSION}_linux-amd64.tar.gz" \
+    && wget -q "https://dist.ipfs.tech/kubo/${IPFS_VERSION}/${TARGET}" -O /tmp/ipfs.tar.gz \
     && tar -xzf /tmp/ipfs.tar.gz -C /tmp \
-    && mv /tmp/go-ipfs/ipfs /usr/local/bin/ipfs \
+    && mv /tmp/kubo/ipfs /usr/local/bin/ipfs \
     && chmod +x /usr/local/bin/ipfs \
-    && rm -rf /tmp/ipfs.tar.gz /tmp/go-ipfs
+    && rm -rf /tmp/ipfs.tar.gz /tmp/kubo
 
 # Create directories
 RUN mkdir -p /var/log/supervisor /opt/dappnode /opt/dappnode-app /data/ipfs /data/geth
