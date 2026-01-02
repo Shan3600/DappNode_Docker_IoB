@@ -108,7 +108,7 @@ resource "google_compute_instance" "dappnode_vm" {
   }
 
   metadata = {
-    ssh-keys = var.ssh_public_key != "" ? "${var.ssh_user}:${var.ssh_public_key}" : ""
+    ssh-keys = var.ssh_public_key != "" ? "${var.ssh_user}:${var.ssh_public_key}" : null
   }
 
   metadata_startup_script = file("${path.module}/scripts/install-dappnode.sh")

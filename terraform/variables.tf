@@ -54,9 +54,9 @@ variable "debian_image" {
 }
 
 variable "ssh_source_ranges" {
-  description = "Source IP ranges allowed for SSH access"
+  description = "Source IP ranges allowed for SSH access. SECURITY: Restrict to your IP for production use."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["0.0.0.0/0"] # WARNING: Allows SSH from anywhere - change in production!
 }
 
 variable "ssh_user" {
@@ -69,7 +69,6 @@ variable "ssh_public_key" {
   description = "SSH public key for VM access"
   type        = string
   default     = ""
-  sensitive   = true
 }
 
 variable "service_account_email" {

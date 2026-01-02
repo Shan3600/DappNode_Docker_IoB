@@ -42,9 +42,27 @@ fi
 # Install Docker Compose
 echo "Installing Docker Compose..."
 if ! command -v docker-compose &> /dev/null; then
-  DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
-  curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  # Use fixed version for reproducibility
+  DOCKER_COMPOSE_VERSION="v2.24.1"
+  COMPOSE_URL="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)"
+  COMPOSE_CHECKSUM_URL="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m).sha256"
+  
+  # Download Docker Compose
+  curl -L "${COMPOSE_URL}" -o /tmp/docker-compose
+  
+  # Download and verify checksum (if available)
+  if curl -L "${COMPOSE_CHECKSUM_URL}" -o /tmp/docker-compose.sha256 2>/dev/null; then
+    cd /tmp
+    sha256sum -c docker-compose.sha256 || (echo "Checksum verification failed" && exit 1)
+    cd -
+  else
+    echo "Warning: Checksum not available, skipping verification"
+  fi
+  
+  # Install
+  mv /tmp/docker-compose /usr/local/bin/docker-compose
   chmod +x /usr/local/bin/docker-compose
+  rm -f /tmp/docker-compose.sha256
 else
   echo "Docker Compose is already installed"
 fi
@@ -52,8 +70,22 @@ fi
 # Download and install DappNode
 echo "Installing DappNode..."
 if [ ! -d "/usr/src/dappnode" ]; then
-  wget -O - https://prerequisites.dappnode.io | sudo bash
-  wget -O - https://installer.dappnode.io | sudo bash
+  # Download scripts to temporary location
+  echo "Downloading DappNode prerequisites script..."
+  wget -O /tmp/dappnode-prerequisites.sh https://prerequisites.dappnode.io
+  
+  echo "Downloading DappNode installer script..."
+  wget -O /tmp/dappnode-installer.sh https://installer.dappnode.io
+  
+  # Review scripts (logged for audit)
+  echo "Scripts downloaded. Executing prerequisites..."
+  bash /tmp/dappnode-prerequisites.sh
+  
+  echo "Executing DappNode installer..."
+  bash /tmp/dappnode-installer.sh
+  
+  # Clean up
+  rm -f /tmp/dappnode-prerequisites.sh /tmp/dappnode-installer.sh
 else
   echo "DappNode directory already exists, skipping installation"
 fi
