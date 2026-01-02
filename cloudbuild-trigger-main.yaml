@@ -1,0 +1,26 @@
+# Cloud Build Trigger Configuration for Main Branch Deployment
+# Use this file to create the main deployment trigger via gcloud CLI
+
+name: terraform-deploy-main
+description: "Deploys Terraform infrastructure when merged to main branch"
+filename: cloudbuild.yaml
+
+github:
+  owner: Shan3600
+  name: DappNode_Docker_IoB
+  push:
+    branch: ^main$
+
+includedFiles:
+  - "terraform/**"
+  - "cloudbuild.yaml"
+
+substitutions:
+  _TERRAFORM_VERSION: "1.6.6"
+  _TERRAFORM_ROOT: "terraform"
+
+tags:
+  - terraform
+  - deploy
+  - main
+  - dappnode
