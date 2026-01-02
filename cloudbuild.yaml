@@ -1,0 +1,98 @@
+# Cloud Build configuration for Terraform CI/CD Pipeline
+# This pipeline handles DappNode infrastructure deployment on GCP
+
+# Substitutions for dynamic variables
+substitutions:
+  _TERRAFORM_VERSION: '1.6.6'
+  _TERRAFORM_ROOT: 'terraform'
+
+# Steps to execute
+steps:
+  # Step 1: Terraform Format Check
+  - name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
+    id: 'terraform-fmt'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd ${_TERRAFORM_ROOT}
+        terraform fmt -check -recursive || (echo "Terraform files are not formatted. Run 'terraform fmt -recursive' to fix." && exit 1)
+    waitFor: ['-']
+
+  # Step 2: Terraform Init
+  - name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
+    id: 'terraform-init'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd ${_TERRAFORM_ROOT}
+        terraform init -backend-config="bucket=${PROJECT_ID}-terraform-state"
+    waitFor: ['terraform-fmt']
+
+  # Step 3: Terraform Validate
+  - name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
+    id: 'terraform-validate'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd ${_TERRAFORM_ROOT}
+        terraform validate
+    waitFor: ['terraform-init']
+
+  # Step 4: Terraform Plan (runs on PR and merge)
+  - name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
+    id: 'terraform-plan'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd ${_TERRAFORM_ROOT}
+        terraform plan -out=tfplan -input=false
+    waitFor: ['terraform-validate']
+
+  # Step 5: Save Plan Output (for PR comments)
+  - name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
+    id: 'terraform-plan-output'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd ${_TERRAFORM_ROOT}
+        terraform show -no-color tfplan > /workspace/plan-output.txt
+        echo "Terraform plan output saved to /workspace/plan-output.txt"
+    waitFor: ['terraform-plan']
+
+  # Step 6: Terraform Apply (only on merge to main)
+  # This step only runs when code is merged to main branch
+  - name: 'hashicorp/terraform:${_TERRAFORM_VERSION}'
+    id: 'terraform-apply'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        if [ "$BRANCH_NAME" = "main" ]; then
+          cd ${_TERRAFORM_ROOT}
+          echo "Applying Terraform changes to main branch..."
+          terraform apply -auto-approve tfplan
+        else
+          echo "Skipping terraform apply - not on main branch"
+        fi
+    waitFor: ['terraform-plan-output']
+
+# Build timeout
+timeout: '1800s'
+
+# Options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'N1_HIGHCPU_8'
+
+# Artifacts to store
+artifacts:
+  objects:
+    location: 'gs://${PROJECT_ID}-build-artifacts/terraform-plans/${BUILD_ID}'
+    paths:
+      - '${_TERRAFORM_ROOT}/tfplan'
+      - 'plan-output.txt'
