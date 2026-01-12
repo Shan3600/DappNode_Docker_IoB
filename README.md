@@ -2,7 +2,20 @@
 
 This repository contains the infrastructure-as-code for deploying DappNode servers on Google Cloud Platform (GCP) using Terraform, with automated CI/CD via Google Cloud Build.
 
+## Quick Links
+
+- 🚀 **[Quick Start Guide](QUICKSTART.md)** - Get started in minutes
+- 📖 **[Terraform Documentation](terraform/README.md)** - Detailed deployment guide
+- ✅ **[Validation Checklist](VALIDATION.md)** - Verify your deployment
+- 🔧 **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Common issues and solutions
+- 📋 **[Setup Instructions](SETUP.md)** - Initial repository setup
+
 ## Overview
+
+**Project Configuration:**
+- **GCP Project ID**: `blockchaindappnode`
+- **Default Region**: `us-central1`
+- **Default Zone**: `us-central1-a`
 
 The CI/CD pipeline automates the deployment of DappNode infrastructure with the following features:
 
@@ -92,21 +105,44 @@ To prevent PRs from being merged if Terraform plan fails:
    - Select: `terraform-pr-validation` (Cloud Build check)
    - ✅ Do not allow bypassing the above settings
 
+## Quick Deployment
+
+For the `blockchaindappnode` project, you can deploy quickly using the automated script:
+
+```bash
+# Clone the repository
+git clone https://github.com/Shan3600/DappNode_Docker_IoB.git
+cd DappNode_Docker_IoB
+
+# Checkout the terraform configuration branch
+git checkout copilot/terraform-config-dappnode
+
+# Run the automated deployment
+cd terraform
+./init-deployment.sh
+```
+
+The script will:
+1. ✅ Check prerequisites (gcloud, terraform)
+2. ✅ Enable required GCP APIs
+3. ✅ Create GCS buckets for Terraform state
+4. ✅ Configure Cloud Build permissions
+5. ✅ Initialize and validate Terraform
+6. ✅ Generate execution plan
+7. ✅ Prompt for deployment confirmation
+
+For detailed steps, see the **[Quick Start Guide](QUICKSTART.md)**.
+
 ## Configuration
 
 ### Terraform Variables
 
-Copy the example variables file and configure:
+The repository is pre-configured for the `blockchaindappnode` project with a `terraform.tfvars` file.
 
-```bash
-cd terraform
-cp terraform.tfvars.example terraform.tfvars
-```
-
-Edit `terraform.tfvars` with your values:
+To customize the configuration, edit `terraform/terraform.tfvars`:
 
 ```hcl
-project_id = "your-gcp-project-id"
+project_id = "blockchaindappnode"  # Pre-configured
 region     = "us-central1"
 zone       = "us-central1-a"
 environment = "dev"
@@ -120,12 +156,12 @@ disk_size_gb  = 100
 disk_type     = "pd-standard"
 
 # SSH configuration
-ssh_source_ranges = ["YOUR-IP/32"]  # Your public IP
+ssh_source_ranges = ["YOUR-IP/32"]  # Update to your public IP for security
 ssh_user          = "admin"
-ssh_public_key    = "ssh-rsa AAAAB3... your-email@example.com"
+ssh_public_key    = "ssh-rsa AAAAB3... your-email@example.com"  # Add your SSH key
 ```
 
-⚠️ **Security Note**: Never commit `terraform.tfvars` to version control as it may contain sensitive data. The file is excluded in `.gitignore`.
+⚠️ **Security Note**: The `terraform.tfvars` file is committed to this branch for the specific `blockchaindappnode` project. Always restrict `ssh_source_ranges` to your IP address.
 
 ## Usage
 
@@ -134,7 +170,7 @@ ssh_public_key    = "ssh-rsa AAAAB3... your-email@example.com"
 #### Initialize Terraform
 ```bash
 cd terraform
-terraform init -backend-config="bucket=YOUR-PROJECT-ID-terraform-state"
+terraform init -backend-config="bucket=blockchaindappnode-terraform-state"
 ```
 
 #### Format Code
