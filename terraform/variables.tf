@@ -32,19 +32,19 @@ variable "subnet_cidr" {
 variable "machine_type" {
   description = "GCP machine type for DappNode VM"
   type        = string
-  default     = "n1-standard-4"
+  default     = "n2-custom-16-24576"
 }
 
 variable "disk_size_gb" {
   description = "Boot disk size in GB"
   type        = number
-  default     = 100
+  default     = 300
 }
 
 variable "disk_type" {
   description = "Boot disk type"
   type        = string
-  default     = "pd-standard"
+  default     = "pd-ssd"
 }
 
 variable "debian_image" {

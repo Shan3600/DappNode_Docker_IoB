@@ -27,68 +27,13 @@ apt-get install -y \
   lsb-release \
   sudo
 
-# Install Docker
-echo "Installing Docker..."
-if ! command -v docker &> /dev/null; then
-  curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
-  sh /tmp/get-docker.sh
-  systemctl enable docker
-  systemctl start docker
-  rm /tmp/get-docker.sh
-else
-  echo "Docker is already installed"
-fi
+# Install DappNode prerequisites using official script
+echo "Installing DappNode prerequisites..."
+wget -O - https://prerequisites.dappnode.io | bash
 
-# Install Docker Compose
-echo "Installing Docker Compose..."
-if ! command -v docker-compose &> /dev/null; then
-  # Use fixed version for reproducibility
-  DOCKER_COMPOSE_VERSION="v2.24.1"
-  COMPOSE_URL="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)"
-  COMPOSE_CHECKSUM_URL="https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m).sha256"
-  
-  # Download Docker Compose
-  curl -L "${COMPOSE_URL}" -o /tmp/docker-compose
-  
-  # Download and verify checksum (if available)
-  if curl -L "${COMPOSE_CHECKSUM_URL}" -o /tmp/docker-compose.sha256 2>/dev/null; then
-    cd /tmp
-    sha256sum -c docker-compose.sha256 || (echo "Checksum verification failed" && exit 1)
-    cd -
-  else
-    echo "Warning: Checksum not available, skipping verification"
-  fi
-  
-  # Install
-  mv /tmp/docker-compose /usr/local/bin/docker-compose
-  chmod +x /usr/local/bin/docker-compose
-  rm -f /tmp/docker-compose.sha256
-else
-  echo "Docker Compose is already installed"
-fi
-
-# Download and install DappNode
+# Install DappNode using official installer
 echo "Installing DappNode..."
-if [ ! -d "/usr/src/dappnode" ]; then
-  # Download scripts to temporary location
-  echo "Downloading DappNode prerequisites script..."
-  wget -O /tmp/dappnode-prerequisites.sh https://prerequisites.dappnode.io
-  
-  echo "Downloading DappNode installer script..."
-  wget -O /tmp/dappnode-installer.sh https://installer.dappnode.io
-  
-  # Review scripts (logged for audit)
-  echo "Scripts downloaded. Executing prerequisites..."
-  bash /tmp/dappnode-prerequisites.sh
-  
-  echo "Executing DappNode installer..."
-  bash /tmp/dappnode-installer.sh
-  
-  # Clean up
-  rm -f /tmp/dappnode-prerequisites.sh /tmp/dappnode-installer.sh
-else
-  echo "DappNode directory already exists, skipping installation"
-fi
+wget -O - https://installer.dappnode.io | bash
 
 # Configure firewall (if UFW is installed)
 if command -v ufw &> /dev/null; then
@@ -106,10 +51,6 @@ fi
 echo "Applying system optimizations..."
 sysctl -w vm.max_map_count=262144
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf
-
-# Enable and start DappNode services
-echo "Enabling DappNode services..."
-systemctl enable docker
 
 echo "=========================================="
 echo "DappNode Installation Complete!"
